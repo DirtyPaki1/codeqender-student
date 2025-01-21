@@ -38,14 +38,16 @@ const TweetGenerator = () => {
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
+    setDisableSubmitButton(true);
 
     handleSubmit(event);
-    setDisableSubmitButton(true);
   };
 
   const getImageData = async (prompt: string) => {
     try {
       setLoading(true);
+      setDisableSubmitButton(true);
+
       const response = await fetch('/api/dall-e', {
         method: 'POST',
         headers: {
@@ -53,15 +55,20 @@ const TweetGenerator = () => {
         },
         body: JSON.stringify({ prompt })
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const { imageUrl } = await response.json();
       setImageUrl(imageUrl);
       setError('');
     } catch (error) {
-      setError(`An error occurred calling the Dall-E API: ${error}`);
+      setError(`An error occurred calling the DALL-E API: ${error}`);
     }
     setLoading(false);
+    setDisableSubmitButton(false);
   };
-
 
   return (
     <div className={styles.container}>
@@ -79,7 +86,7 @@ const TweetGenerator = () => {
 }`}
           value={codeSnippet}
           onChange={(e) => {
-            setCodeSnippet(e.target.value)
+            setCodeSnippet(e.target.value);
             handleInputChange({
               ...e,
               target: {
@@ -133,7 +140,7 @@ const TweetGenerator = () => {
         </button>
       </form>
       {loading && <p>Loading...</p>}
-      {error && <p className={styles.error}>{error}>{error}</p>}
+      {error && <p className={styles.error}>{error}</p>}
       {generatedTweet && <Tweet tweet={generatedTweet} imageSrc={imageUrl} />}
     </div>
   );
